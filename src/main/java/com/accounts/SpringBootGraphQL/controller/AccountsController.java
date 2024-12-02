@@ -1,6 +1,6 @@
 package com.accounts.SpringBootGraphQL.controller;
 
-import com.accounts.SpringBootGraphQL.domain.BankAccount;
+import com.accounts.SpringBootGraphQL.entity.BankAccount;
 import com.accounts.SpringBootGraphQL.domain.Client;
 import com.accounts.SpringBootGraphQL.service.BankService;
 import lombok.extern.slf4j.Slf4j;
