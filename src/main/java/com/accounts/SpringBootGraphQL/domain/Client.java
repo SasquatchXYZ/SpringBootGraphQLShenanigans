@@ -1,4 +1,4 @@
 package com.accounts.SpringBootGraphQL.domain;
 
-public record Client(String id, String accountId, String firstName, String middleName, String lastName) {
+public record Client(Long id, String firstName, String middleName, String lastName) {
 }
