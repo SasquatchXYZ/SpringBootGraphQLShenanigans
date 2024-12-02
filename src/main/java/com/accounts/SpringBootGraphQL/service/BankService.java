@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -34,10 +36,21 @@ public class BankService {
     }
 
     // Method to get client by account Id
-    public Client GetClientByAccountId(String accountId) {
+    public Client getClientByAccountId(String accountId) {
         return clients.stream()
                 .filter(client -> client.accountId().equals(accountId))
                 .findFirst()
                 .orElse(null);
+    }
+
+    public Map<BankAccount, Client> getClients(List<BankAccount> accounts) {
+        return accounts.stream()
+                .collect(Collectors.toMap(
+                        account -> account, // Key Mapper
+                        account -> clients.stream()
+                                .filter(client -> client.id().equals(account.clientId()))
+                                .findFirst()
+                                .orElse(null) // Value Mapper
+                ));
     }
 }
