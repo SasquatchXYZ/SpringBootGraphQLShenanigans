@@ -26,7 +26,6 @@ public class AccountsController {
     }
 
 
-    // Get clients with an N + 1 problem
     @QueryMapping
     BankAccount accountById(@Argument("accountId") Integer accountId) {
         log.info("Getting Account by Id : " + accountId);
@@ -36,9 +35,9 @@ public class AccountsController {
     /**
      * Get clients without N + 1 problem
      **/
-    @BatchMapping(field = "client")
-    Map<BankAccount, Client> getClients(List<BankAccount> accounts) {
+    @BatchMapping(field = "client", typeName = "BankAccountType")
+    Map<BankAccount, Client> clients(List<BankAccount> accounts) {
         log.info("Getting client for Accounts : " + accounts.size());
-        return bankService.getClients(accounts);
+        return bankService.getBankAccountClientMap(accounts);
     }
 }

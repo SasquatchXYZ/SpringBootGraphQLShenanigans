@@ -42,7 +42,7 @@ public class BankService {
                 .orElse(null);
     }
 
-    public Map<BankAccount, Client> getClients(List<BankAccount> accounts) {
+    public Map<BankAccount, Client> getBankAccountClientMap(List<BankAccount> accounts) {
         return accounts.stream()
                 .collect(Collectors.toMap(
                         account -> account, // Key Mapper
