@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
+import org.springframework.graphql.data.method.annotation.MutationMapping;
 import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
@@ -39,5 +40,24 @@ public class AccountsController {
     Map<BankAccount, Client> clients(List<BankAccount> accounts) {
         log.info("Getting client for Accounts : " + accounts.size());
         return bankService.getBankAccountClientMap(accounts);
+    }
+
+    @MutationMapping
+    Boolean addAccount(@Argument("account") BankAccount account) {
+        log.info("Adding account : " + account);
+        bankService.save(account);
+        return true;
+    }
+
+    @MutationMapping
+    BankAccount editAccount(@Argument("account") BankAccount account) {
+        log.info("Updating account : " + account);
+        return bankService.modify(account);
+    }
+
+    @MutationMapping
+    Boolean deleteAccount(@Argument("id") Integer accountId) {
+        log.info("Deleting account : " + accountId);
+        return bankService.delete(accountId);
     }
 }
