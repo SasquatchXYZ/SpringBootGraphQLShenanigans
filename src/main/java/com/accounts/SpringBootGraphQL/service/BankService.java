@@ -35,10 +35,9 @@ public class BankService {
         return bankAccounts;
     }
 
-    // Method to get client by account Id
-    public Client getClientByAccountId(String accountId) {
-        return clients.stream()
-                .filter(client -> client.accountId().equals(accountId))
+    public BankAccount accountById(Integer accountId) {
+        return bankAccounts.stream()
+                .filter(account -> account.id().equals(accountId))
                 .findFirst()
                 .orElse(null);
     }
