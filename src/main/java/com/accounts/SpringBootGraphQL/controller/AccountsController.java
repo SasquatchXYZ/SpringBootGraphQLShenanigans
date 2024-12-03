@@ -23,9 +23,9 @@ public class AccountsController {
     BankService bankService;
 
     @QueryMapping
-    List<BankAccount> accounts() {
-        log.info("Getting accounts ");
-        return bankService.getAccounts();
+    List<BankAccount> accounts(@ContextValue String accountStatus) {
+        log.info("Getting Accounts for status : " + accountStatus);
+        return bankService.getAccounts(accountStatus);
     }
 
 

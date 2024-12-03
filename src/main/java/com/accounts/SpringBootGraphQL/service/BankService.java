@@ -53,8 +53,8 @@ public class BankService {
     }
 
     // Method to get all bank accounts
-    public List<BankAccount> getAccounts() {
-        return repo.findAll();
+    public List<BankAccount> getAccounts(String accountStatus) {
+        return repo.findByStatus(accountStatus);
     }
 
     public BankAccount accountById(Integer accountId) {
