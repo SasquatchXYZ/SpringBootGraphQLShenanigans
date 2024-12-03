@@ -1,43 +1,105 @@
 package com.accounts.SpringBootGraphQL.service;
 
-import com.accounts.SpringBootGraphQL.domain.BankAccount;
+import com.accounts.SpringBootGraphQL.entity.BankAccount;
 import com.accounts.SpringBootGraphQL.domain.Client;
-import com.accounts.SpringBootGraphQL.domain.Currency;
+import com.accounts.SpringBootGraphQL.exceptions.AccountNotFoundException;
+import com.accounts.SpringBootGraphQL.exceptions.ClientNotFoundException;
+import com.accounts.SpringBootGraphQL.repo.BankAccountRepo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 public class BankService {
 
-    // Immutable list for bank accounts and clients
-    private static final List<BankAccount> bankAccounts = List.of(
-            new BankAccount("A100", "C100", Currency.USD, 106.00f, "A"),
-            new BankAccount("A101", "C200", Currency.CAD, 250.00f, "A"),
-            new BankAccount("A102", "C300", Currency.CAD, 333.00f, "I"),
-            new BankAccount("A103", "C400", Currency.EUR, 4000.00f, "A"),
-            new BankAccount("A104", "C500", Currency.EUR, 4000.00f, "A")
-    );
     private static final List<Client> clients = List.of(
-            new Client("C100", "A100", "Elena", "Maria", "Gonzalez"),
-            new Client("C200", "A101", "James", "Robert", "Smith"),
-            new Client("C300", "A102", "Aarav", "Kumar", "Patel"),
-            new Client("C400", "A103", "Linh", "Thi", "Nguyen"),
-            new Client("C500", "A104", "Olivia", "Grace", "Johnson")
+            new Client(100L, "John", "T.", "Doe"),
+            new Client(101L, "Emma", "B.", "Smith"),
+            new Client(102L, "James", "R.", "Brown"),
+            new Client(103L, "Olivia", "S.", "Johnson"),
+            new Client(104L, "William", "K.", "Jones")
     );
 
-    // Method to get all bank accounts
-    public List<BankAccount> getAccounts() {
-        return bankAccounts;
+    @Autowired
+    private BankAccountRepo repo;
+
+    public void save(BankAccount account) {
+        if (Objects.isNull(account.getId()))
+            throw new AccountNotFoundException("Invalid Account Id : " + account.getId());
+
+        if (isValidClient(account)) {
+            repo.save(account);
+        } else {
+            throw new ClientNotFoundException("Client Not Found " + account.getClientId());
+        }
     }
 
-    // Method to get client by account Id
-    public Client GetClientByAccountId(String accountId) {
+    public BankAccount modify(BankAccount account) {
+        if (Objects.isNull(account.getId()))
+            throw new AccountNotFoundException("Invalid Account Id : " + account.getId());
+
+        if (isValidClient(account)) {
+            return repo.save(account);
+        } else {
+            throw new ClientNotFoundException("Client Not Found " + account.getClientId());
+        }
+    }
+
+    // Method to get all bank accounts
+    public List<BankAccount> getAccounts(String accountStatus) {
+        return repo.findByStatus(accountStatus);
+    }
+
+    public BankAccount accountById(Integer accountId) {
+        if (repo.findById(accountId).isPresent()) {
+            return repo.findById(accountId).get();
+        }
+        throw new AccountNotFoundException("Account Not Found " + accountId);
+    }
+
+    public Boolean delete(Integer accountId) {
+        if (repo.findById(accountId).isPresent()) {
+            repo.delete(repo.findById(accountId).get());
+            return true;
+        }
+        return false;
+    }
+
+    private List<Client> getClients() {
+        return clients;
+    }
+
+    public Map<BankAccount, Client> getBankAccountClientMap(List<BankAccount> bankAccounts) {
+        // Collect all client Ids from the list of bank accounts
+        Set<Long> clientIds = bankAccounts.stream()
+                .map(BankAccount::getClientId)
+                .collect(Collectors.toSet());
+
+        // Fetch clients for all collected Ids
+        List<Client> clients = getClients().stream()
+                .filter(client -> clientIds.contains(client.id()))
+                .toList();
+
+        // Map each bank account to its corresponding client
         return clients.stream()
-                .filter(client -> client.accountId().equals(accountId))
-                .findFirst()
-                .orElse(null);
+                .collect(Collectors.toMap(
+                        client -> bankAccounts.stream()
+                                .filter(bankAccount -> bankAccount.getClientId().equals(client.id()))
+                                .findFirst()
+                                .orElse(null),
+                        client -> client
+                ));
+    }
+
+    private boolean isValidClient(BankAccount account) {
+        return clients.stream()
+                .anyMatch(client -> client.id().equals(account.getClientId()));
     }
 }
