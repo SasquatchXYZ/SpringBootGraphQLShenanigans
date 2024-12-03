@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -30,6 +31,9 @@ public class BankService {
     private BankAccountRepo repo;
 
     public void save(BankAccount account) {
+        if (Objects.isNull(account.getId()))
+            throw new AccountNotFoundException("Invalid Account Id : " + account.getId());
+
         if (isValidClient(account)) {
             repo.save(account);
         } else {
@@ -38,6 +42,9 @@ public class BankService {
     }
 
     public BankAccount modify(BankAccount account) {
+        if (Objects.isNull(account.getId()))
+            throw new AccountNotFoundException("Invalid Account Id : " + account.getId());
+
         if (isValidClient(account)) {
             return repo.save(account);
         } else {
@@ -51,42 +58,43 @@ public class BankService {
     }
 
     public BankAccount accountById(Integer accountId) {
-        return repo.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("Account Not Found " + accountId));
+        if (repo.findById(accountId).isPresent()) {
+            return repo.findById(accountId).get();
+        }
+        throw new AccountNotFoundException("Account Not Found " + accountId);
     }
 
     public Boolean delete(Integer accountId) {
-        return repo.findById(accountId)
-                .map(account -> {
-                    repo.delete(account);
-                    return true;
-                })
-                .orElse(false);
+        if (repo.findById(accountId).isPresent()) {
+            repo.delete(repo.findById(accountId).get());
+            return true;
+        }
+        return false;
     }
 
     private List<Client> getClients() {
         return clients;
     }
 
-    public Map<BankAccount, Client> getBankAccountClientMap(List<BankAccount> accounts) {
+    public Map<BankAccount, Client> getBankAccountClientMap(List<BankAccount> bankAccounts) {
         // Collect all client Ids from the list of bank accounts
-        Set<Long> clientIds = accounts.stream()
+        Set<Long> clientIds = bankAccounts.stream()
                 .map(BankAccount::getClientId)
                 .collect(Collectors.toSet());
 
         // Fetch clients for all collected Ids
-        List<Client> relevantClients = getClients().stream()
+        List<Client> clients = getClients().stream()
                 .filter(client -> clientIds.contains(client.id()))
                 .toList();
 
         // Map each bank account to its corresponding client
-        return accounts.stream()
+        return clients.stream()
                 .collect(Collectors.toMap(
-                        bankAccount -> bankAccount,
-                        bankAccount -> relevantClients.stream()
-                                .filter(client -> client.id().equals(bankAccount.getClientId()))
+                        client -> bankAccounts.stream()
+                                .filter(bankAccount -> bankAccount.getClientId().equals(client.id()))
                                 .findFirst()
-                                .orElseThrow(() -> new ClientNotFoundException("Client Not Found for Account " + bankAccount.getId()))
+                                .orElse(null),
+                        client -> client
                 ));
     }
 
